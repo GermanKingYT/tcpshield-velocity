@@ -14,12 +14,14 @@ public class HandshakePacketHandler {
     private final Logger logger;
     private final SignatureVerifier signatureVerifier;
     private final TimestampValidation timestampValidation;
+    private final TCPShieldConfig config;
 
     public HandshakePacketHandler(Logger logger, TCPShieldConfig config) {
         try {
             this.logger = logger;
             this.signatureVerifier = new SignatureVerifier();
             this.timestampValidation = new TimestampValidation(config);
+            this.config = config;
         } catch (Exception e) {
             throw new TCPShieldInitializationException(e);
         }
@@ -90,22 +92,28 @@ public class HandshakePacketHandler {
     }
 
     private void handleInvalidTimestamp(IPlayer player, long timestamp, long currentTime) {
-        this.logger.warning(String.format("%s[%s/%s] provided valid handshake information, but timestamp was not valid. " +
-                "Provided timestamp: %d vs. system timestamp: %d. Please check your machine time.", player.getName(), player.getUUID(), player.getIP(), timestamp, currentTime));
+        if (config.isDebug())
+            this.logger.warning(String.format("%s[%s/%s] provided valid handshake information, but timestamp was not valid. " +
+                    "Provided timestamp: %d vs. system timestamp: %d. Please check your machine time. Timestamp validation mode: %s", player.getName(), player.getUUID(), player.getIP(), timestamp, currentTime, config.getTimestampValidationMode()));
 
-        player.disconnect();
-
+        if (config.isOnlyProxy())
+            player.disconnect();
     }
 
     private void handleSigningVerificationFailure(IPlayer player, String rawPayload) {
-        this.logger.warning(String.format("%s[%s/%s] provided valid handshake information, but signing check failed. Raw payload = \"%s\"", player.getName(), player.getUUID(), player.getIP(), rawPayload));
+        if (config.isDebug())
+            this.logger.warning(String.format("%s[%s/%s] provided valid handshake information, but signing check failed. Raw payload = \"%s\"", player.getName(), player.getUUID(), player.getIP(), rawPayload));
 
-        player.disconnect();
+        if (config.isOnlyProxy())
+            player.disconnect();
     }
 
     private void handleNotProxiedConnection(IPlayer player, String rawPayload) {
-        this.logger.info(String.format("%s[%s/%s] was disconnected because no proxy info was received and only-allow-proxy-connections is enabled. Raw payload = \"%s\"", player.getName(), player.getUUID(), player.getIP(), rawPayload));
+        if (!config.isOnlyProxy()) return;
 
+        if (config.isDebug())
+            this.logger.info(String.format("%s[%s/%s] was disconnected because no proxy info was received and only-allow-proxy-connections is enabled. Raw payload = \"%s\"", player.getName(), player.getUUID(), player.getIP(), rawPayload));
+        
         player.disconnect();
     }
 }
