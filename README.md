@@ -1,4 +1,12 @@
 # TCPShield
+
+Edit #dotSpace:
+
+- Only Velocity-Plugin
+- Without Config (Cloud System don't need something to configure)
+- Changed Logger to Log4j -> so cloudnet and other cloudsystems log info
+
+
 TCPShield is the plugin for the same named DDoS mitigation service [TCPShield](https://tcpshield.com).
 
 This plugin is responsible for validating clients join via the TCPShield network.
