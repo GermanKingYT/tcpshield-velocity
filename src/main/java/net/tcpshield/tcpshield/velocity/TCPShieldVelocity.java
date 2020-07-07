@@ -24,23 +24,24 @@ public class TCPShieldVelocity {
 
     private final ProxyServer server;
     private final Logger logger;
-    private final Path dataFolder;
 
     @Inject
-    public TCPShieldVelocity(ProxyServer server, Logger logger, @DataDirectory Path dataFolder) {
+    public TCPShieldVelocity(ProxyServer server, Logger logger) {
         this.server = server;
         this.logger = logger;
-        this.dataFolder = dataFolder;
-
         instance = this;
     }
 
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
-        this.server.getEventManager().register(this, new VelocityHandshakePacketHandler(logger, dataFolder.toFile()));
+        this.server.getEventManager().register(this, new VelocityHandshakePacketHandler());
     }
 
     public ProxyServer getServer() {
         return this.server;
+    }
+
+    public Logger getLogger() {
+        return this.logger;
     }
 }
